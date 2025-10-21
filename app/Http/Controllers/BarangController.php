@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Barang;
 use App\Models\Kategori;
 use App\Models\Lokasi;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
@@ -25,7 +26,7 @@ class BarangController extends Controller implements HasMiddleware
     {
         $search = $request->search;
 
-        $barangs = Barang::with(['kategori', 'lokasi'])
+        $barangs = Barang::with(['kategori', 'lokasi', 'kondisiBarang'])
             ->when($search, function ($query, $search) {
                 $query->where('nama_barang', 'like', '%' . $search . '%')
                       ->orWhere('kode_barang', 'like', '%' . $search . '%');
@@ -49,22 +50,57 @@ class BarangController extends Controller implements HasMiddleware
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'kode_barang'       => 'required|string|max:50|unique:barangs,kode_barang',
-            'nama_barang'       => 'required|string|max:150',
-            'kategori_id'       => 'required|exists:kategoris,id',
-            'lokasi_id'         => 'required|exists:lokasis,id',
-            'jumlah'            => 'required|integer|min:0',
-            'satuan'            => 'required|string|max:20',
-            'kondisi'           => 'required|in:Baik,Rusak Ringan,Rusak Berat',
-            'tanggal_pengadaan' => 'required|date',
-            'gambar'            => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'kode_barang'          => 'required|string|max:50|unique:barangs,kode_barang',
+            'nama_barang'          => 'required|string|max:150',
+            'kategori_id'          => 'required|exists:kategoris,id',
+            'lokasi_id'            => 'required|exists:lokasis,id',
+            'satuan'               => 'required|string|max:20',
+            'tanggal_pengadaan'    => 'required|date',
+            'gambar'               => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'kondisi_baik'         => 'required|integer|min:0',
+            'kondisi_rusak_ringan' => 'required|integer|min:0',
+            'kondisi_rusak_berat'  => 'required|integer|min:0',
+            'sumber_dana'          => 'nullable|string|max:100',
         ]);
 
         if ($request->hasFile('gambar')) {
             $validated['gambar'] = $request->file('gambar')->store(null, 'gambar-barang');
         }
 
-        Barang::create($validated);
+        DB::transaction(function () use ($validated) {
+            $barang = Barang::create([
+                'kode_barang' => $validated['kode_barang'],
+                'nama_barang' => $validated['nama_barang'],
+                'kategori_id' => $validated['kategori_id'],
+                'lokasi_id'   => $validated['lokasi_id'],
+                'satuan'      => $validated['satuan'],
+                'tanggal_pengadaan' => $validated['tanggal_pengadaan'],
+                'gambar'      => $validated['gambar'] ?? null,
+                'sumber_dana' => $validated['sumber_dana'] ?? null, // ✅ Tambahkan ini
+            ]);
+
+            // Simpan kondisi barang
+            if ($validated['kondisi_baik'] > 0) {
+                $barang->kondisiBarang()->create([
+                    'kondisi' => 'baik',
+                    'jumlah'  => $validated['kondisi_baik']
+                ]);
+            }
+
+            if ($validated['kondisi_rusak_ringan'] > 0) {
+                $barang->kondisiBarang()->create([
+                    'kondisi' => 'rusak_ringan',
+                    'jumlah'  => $validated['kondisi_rusak_ringan']
+                ]);
+            }
+
+            if ($validated['kondisi_rusak_berat'] > 0) {
+                $barang->kondisiBarang()->create([
+                    'kondisi' => 'rusak_berat',
+                    'jumlah'  => $validated['kondisi_rusak_berat']
+                ]);
+            }
+        });
 
         return redirect()->route('barang.index')
             ->with('success', 'Data barang berhasil ditambahkan.');
@@ -72,8 +108,7 @@ class BarangController extends Controller implements HasMiddleware
 
     public function show(Barang $barang)
     {
-        $barang->load(['kategori', 'lokasi']);
-
+        $barang->load(['kategori', 'lokasi', 'kondisiBarang']);
         return view('barang.show', compact('barang'));
     }
 
@@ -88,28 +123,66 @@ class BarangController extends Controller implements HasMiddleware
     public function update(Request $request, Barang $barang)
     {
         $validated = $request->validate([
-            'kode_barang'        => 'required|string|max:50|unique:barangs,kode_barang,' . $barang->id,
-            'nama_barang'        => 'required|string|max:150',
-            'kategori_id'        => 'required|exists:kategoris,id',
-            'lokasi_id'          => 'required|exists:lokasis,id',
-            'jumlah'             => 'required|integer|min:0',
-            'satuan'             => 'required|string|max:20',
-            'kondisi'            => 'required|in:Baik,Rusak Ringan,Rusak Berat',
-            'tanggal_pengadaan'  => 'required|date',
-            'gambar'             => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'kode_barang'          => 'required|string|max:50|unique:barangs,kode_barang,' . $barang->id,
+            'nama_barang'          => 'required|string|max:150',
+            'kategori_id'          => 'required|exists:kategoris,id',
+            'lokasi_id'            => 'required|exists:lokasis,id',
+            'satuan'               => 'required|string|max:20',
+            'tanggal_pengadaan'    => 'required|date',
+            'gambar'               => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'kondisi_baik'         => 'required|integer|min:0',
+            'kondisi_rusak_ringan' => 'required|integer|min:0',
+            'kondisi_rusak_berat'  => 'required|integer|min:0',
+            'sumber_dana'          => 'nullable|string|max:100',
         ]);
 
-        if ($request->hasFile('gambar')) {
-            if ($barang->gambar) {
-                Storage::disk('gambar-barang')->delete($barang->gambar);
+        DB::transaction(function () use ($validated, $request, $barang) {
+            if ($request->hasFile('gambar')) {
+                if ($barang->gambar) {
+                    Storage::disk('gambar-barang')->delete($barang->gambar);
+                }
+                $validated['gambar'] = $request->file('gambar')->store(null, 'gambar-barang');
             }
 
-            $validated['gambar'] = $request->file('gambar')->store(null, 'gambar-barang');
-        }
+            $barang->update([
+                'kode_barang' => $validated['kode_barang'],
+                'nama_barang' => $validated['nama_barang'],
+                'kategori_id' => $validated['kategori_id'],
+                'lokasi_id'   => $validated['lokasi_id'],
+                'satuan'      => $validated['satuan'],
+                'tanggal_pengadaan' => $validated['tanggal_pengadaan'],
+                'gambar'      => $validated['gambar'] ?? $barang->gambar,
+                'sumber_dana' => $validated['sumber_dana'] ?? null, // ✅ Tambahkan ini juga
+            ]);
 
-        $barang->update($validated);
+            // Reset kondisi lama
+            $barang->kondisiBarang()->delete();
 
-        return redirect()->route('barang.index')->with('success', 'Data barang berhasil diperbarui.');
+            // Simpan kondisi baru
+            if ($validated['kondisi_baik'] > 0) {
+                $barang->kondisiBarang()->create([
+                    'kondisi' => 'baik',
+                    'jumlah'  => $validated['kondisi_baik']
+                ]);
+            }
+
+            if ($validated['kondisi_rusak_ringan'] > 0) {
+                $barang->kondisiBarang()->create([
+                    'kondisi' => 'rusak_ringan',
+                    'jumlah'  => $validated['kondisi_rusak_ringan']
+                ]);
+            }
+
+            if ($validated['kondisi_rusak_berat'] > 0) {
+                $barang->kondisiBarang()->create([
+                    'kondisi' => 'rusak_berat',
+                    'jumlah'  => $validated['kondisi_rusak_berat']
+                ]);
+            }
+        });
+
+        return redirect()->route('barang.index')
+            ->with('success', 'Data barang berhasil diperbarui.');
     }
 
     public function destroy(Barang $barang)
@@ -120,7 +193,8 @@ class BarangController extends Controller implements HasMiddleware
 
         $barang->delete();
 
-        return redirect()->route('barang.index')->with('success', 'Data barang berhasil dihapus.');
+        return redirect()->route('barang.index')
+            ->with('success', 'Data barang berhasil dihapus.');
     }
 
     public function cetakLaporan()

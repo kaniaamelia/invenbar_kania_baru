@@ -1,6 +1,6 @@
 <style>
     body {
-        font-family: 'Helvetica', 'Arial', sans-serif;
+         font-family: "DejaVu Sans", sans-serif;
         font-size: 12px;
     }
 

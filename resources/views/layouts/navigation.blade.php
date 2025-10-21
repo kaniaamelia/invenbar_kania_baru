@@ -5,53 +5,53 @@
             <x-application-logo style="height: 32px; width:auto;" />
         </a>
 
-        <!-- Toggler (hamburger) -->
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
+        <!-- Toggler -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+            data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" 
+            aria-label="{{ __('Toggle navigation') }}">
             <span class="navbar-toggler-icon"></span>
         </button>
 
         <!-- Menu -->
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <!-- Left Side -->
-<ul class="navbar-nav me-auto">
-    @php
-        $navs = [
-            ['route' => 'dashboard', 'name' => 'Dasboard'],
-            ['route' => 'barang.index', 'name' => 'Barang'],
-            ['route' => 'lokasi.index', 'name' => 'Lokasi'],
-            ['route' => 'kategori.index', 'name' => 'Kategori'],
-            ['route' => 'user.index', 'name' => 'User', 'role' => 'admin'],
-        ];
-    @endphp
+            <ul class="navbar-nav me-auto">
+                @php
+                    $navs = [
+                        ['route' => 'dashboard', 'name' => 'Dashboard'],
+                        ['route' => 'barang.index', 'name' => 'Barang'],
+                        ['route' => 'lokasi.index', 'name' => 'Lokasi'],
+                        ['route' => 'kategori.index', 'name' => 'Kategori'],
+                        ['route' => 'peminjaman.index', 'name' => 'Peminjaman'],
+                        ['route' => 'pemeliharaan.index', 'name' => 'Pemeliharaan'],
+                        ['route' => 'user.index', 'name' => 'User', 'role' => 'admin'],
+                    ];
+                @endphp
 
-    @foreach ($navs as $nav)
-        @php
-            extract($nav);
-        @endphp
+                @foreach ($navs as $nav)
+                    @php extract($nav); @endphp
 
-        @if (isset($role))
-            @role($role)
-                <li class="nav-item">
-                    <x-nav-link :active="request()->routeIs($route)" :href="route($route)">
-                        {{ __($name) }}
-                    </x-nav-link>
-                </li>
-            @endrole
-        @else
-            <li class="nav-item">
-                <x-nav-link :active="request()->routeIs($route)" :href="route($route)">
-                    {{ __($name) }}
-                </x-nav-link>
-            </li>
-        @endif
-    @endforeach
-</ul>
-
+                    @if (isset($role))
+                        @role($role)
+                            <li class="nav-item">
+                                <x-nav-link :active="request()->routeIs($route)" :href="route($route)">
+                                    {{ __($name) }}
+                                </x-nav-link>
+                            </li>
+                        @endrole
+                    @else
+                        <li class="nav-item">
+                            <x-nav-link :active="request()->routeIs($route)" :href="route($route)">
+                                {{ __($name) }}
+                            </x-nav-link>
+                        </li>
+                    @endif
+                @endforeach
+            </ul>
 
             <!-- Right Side -->
             <ul class="navbar-nav ms-auto">
-                <!-- Dropdown User -->
                 <x-dropdown>
                     <x-slot name="trigger">
                         {{ Auth::user()->name }}

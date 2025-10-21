@@ -8,39 +8,44 @@
 
     <title>{{ config('app.name', 'Laravel') }}</title>
 
-    <!-- Css -->
-    <link href="{{ asset('bootstrap/font/bootstrap-icons.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
-    <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!-- Bootstrap CSS (CDN biar simple) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 
-<body>
-    <div class="min-vh-100 bg-light pb-2">
-        @include('layouts.navigation')
+<body class="bg-light">
 
-        <!-- Page Heading -->
-        @isset($header)
-            <header class="bg-white shadow-sm">
-                <div class="container py-4">
-                    {{ $header }}
-                </div>
-            </header>
-        @endisset
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="{{ route('dashboard') }}">{{ config('app.name', 'Laravel') }}</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-        <!-- Page Content -->
-        <main class="container">
-            {{ $slot }}
-        </main>
-    </div>
-    <script src="{{ asset('bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-    <script>
-        let myModalEl = document.querySelector('[data-modal="1"]');
-        if (myModalEl) {
-            const myModal = new bootstrap.Modal(myModalEl);
-            myModal.show();
-        }
-    </script>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="{{ route('dashboard') }}">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('barang.index') }}">Barang</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('kategori.index') }}">Kategori</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('lokasi.index') }}">Lokasi</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('peminjaman.index') }}">Peminjaman</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mb-5">
+        @yield('content')
+    </main>
+
+    <!-- Footer (opsional) -->
+    <footer class="bg-dark text-white text-center py-3">
+        <small>&copy; {{ date('Y') }} - {{ config('app.name', 'Laravel') }}</small>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

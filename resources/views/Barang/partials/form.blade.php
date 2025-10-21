@@ -41,11 +41,17 @@
 
 <div class="row mb-3">
     <div class="col-md-6">
-        <x-form-input 
-            label="Jumlah" 
-            name="jumlah" 
-            type="number" 
-            :value="$barang->jumlah" 
+        <x-form-select 
+            label="Sumber Dana" 
+            name="sumber_dana" 
+            :value="$barang->sumber_dana"
+            :option-data="[
+                ['value' => 'Pemerintah', 'label' => 'Pemerintah'],
+                ['value' => 'Donatur', 'label' => 'Donatur'],
+                ['value' => 'Swadaya', 'label' => 'Swadaya']
+            ]"
+            option-label="label"
+            option-value="value"
         />
     </div>
     <div class="col-md-6">
@@ -60,23 +66,6 @@
 <div class="row mb-3">
     <div class="col-md-6">
         @php
-            $kondisi = [
-                ['kondisi' => 'Baik'],
-                ['kondisi' => 'Rusak Ringan'],
-                ['kondisi' => 'Rusak Berat']
-            ];
-        @endphp
-        <x-form-select 
-            label="Kondisi" 
-            name="kondisi" 
-            :value="$barang->kondisi" 
-            :option-data="$kondisi" 
-            option-label="kondisi" 
-            option-value="kondisi" 
-        />
-    </div>
-    <div class="col-md-6">
-        @php
             $tanggal = $barang->tanggal_pengadaan 
                 ? date('Y-m-d', strtotime($barang->tanggal_pengadaan)) 
                 : null;
@@ -86,6 +75,36 @@
             name="tanggal_pengadaan" 
             type="date" 
             :value="$tanggal" 
+        />
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-4">
+        <x-form-input 
+            label="Jumlah Barang Kondisi Baik" 
+            name="kondisi_baik" 
+            type="number" 
+            min="0"
+            :value="old('kondisi_baik', 0)" 
+        />
+    </div>
+    <div class="col-md-4">
+        <x-form-input 
+            label="Jumlah Barang Rusak Ringan" 
+            name="kondisi_rusak_ringan" 
+            type="number" 
+            min="0"
+            :value="old('kondisi_rusak_ringan', 0)" 
+        />
+    </div>
+    <div class="col-md-4">
+        <x-form-input 
+            label="Jumlah Barang Rusak Berat" 
+            name="kondisi_rusak_berat" 
+            type="number" 
+            min="0"
+            :value="old('kondisi_rusak_berat', 0)" 
         />
     </div>
 </div>

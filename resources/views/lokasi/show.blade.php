@@ -21,7 +21,7 @@
                     <div class="info-box">
                         <h6 class="text-muted">Informasi Lokasi</h6>
                         <p class="mb-1"><strong>Nama Lokasi:</strong> {{ $lokasi->nama_lokasi }}</p>
-                        <p class="mb-1"><strong>Total Barang:</strong> {{ $barangs->total() }} item</p>
+                        <p class="mb-1"><strong>Total Barang:</strong> {{ $barangs->sum(function($barang) { return $barang->kondisiBarang->sum('jumlah'); }) }} item</p>
                         <p class="mb-0"><strong>Dibuat:</strong> {{ $lokasi->created_at->format('d/m/Y H:i') }}</p>
                     </div>
                 </div>
@@ -41,9 +41,9 @@
                                 <th>Kode Barang</th>
                                 <th>Nama Barang</th>
                                 <th>Kategori</th>
-                                <th>Jumlah</th>
+                                <th>Total</th>
                                 <th>Satuan</th>
-                                <th>Kondisi</th>
+                                <th>Rincian Kondisi</th>
                                 <th>Tanggal Pengadaan</th>
                             </tr>
                         </thead>
@@ -58,16 +58,16 @@
                                     <td>
                                         <span class="badge bg-info">{{ $barang->kategori->nama_kategori ?? '-' }}</span>
                                     </td>
-                                    <td class="text-center">{{ $barang->jumlah }}</td>
+                                    <td class="text-center">{{ $barang->kondisiBarang->sum('jumlah') }}</td>
                                     <td>{{ $barang->satuan }}</td>
                                     <td>
-                                        @if($barang->kondisi == 'Baik')
-                                            <span class="badge bg-success">{{ $barang->kondisi }}</span>
-                                        @elseif($barang->kondisi == 'Rusak Ringan')
-                                            <span class="badge bg-warning">{{ $barang->kondisi }}</span>
-                                        @else
-                                            <span class="badge bg-danger">{{ $barang->kondisi }}</span>
-                                        @endif
+                                        @forelse($barang->kondisiBarang as $kondisi)
+                                            <span class="badge bg-{{ $kondisi->kondisi === 'baik' ? 'success' : ($kondisi->kondisi === 'rusak_ringan' ? 'warning' : 'danger') }} me-1">
+                                                {{ $kondisi->jumlah }} {{ str_replace('_', ' ', ucfirst($kondisi->kondisi)) }}
+                                            </span>
+                                        @empty
+                                            <span class="text-muted">-</span>
+                                        @endforelse
                                     </td>
                                     <td>{{ $barang->tanggal_pengadaan->format('d/m/Y') }}</td>
                                 </tr>

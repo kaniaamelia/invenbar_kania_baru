@@ -4,67 +4,53 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-        public function index(Request $request)
-{
-    $search = $request->search ?? null;
+    public function index(Request $request)
+    {
+        $search = $request->search ?? null;
 
-    $users = User::when($search, function ($query, $search) {
-        $query->where('name', 'like', '%' . $search . '%')
-              ->orWhere('email', 'like', '%' . $search . '%');
-    })->paginate();
+        $users = User::when($search, function ($query, $search) {
+            $query->where('name', 'like', '%' . $search . '%')
+                ->orWhere('email', 'like', '%' . $search . '%');
+        })->paginate();
 
-    return view('user.index', compact('users'));
-}
+        return view('user.index', compact('users'));
+    }
 
-
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
-{
-    $user = new User();
-    return view('user.create', compact('user'));
-}
+    {
+        $user = new User();
+        // Ambil daftar role dari database (Spatie)
+        $roles = Role::pluck('name', 'name')->all();
+        return view('user.create', compact('user', 'roles'));
+    }
 
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
 {
     $validated = $request->validate([
         'name'     => 'required|string|max:100',
         'email'    => 'required|email|max:50|unique:users',
         'password' => 'required|string|min:8|confirmed',
+        'role'     => 'required|in:admin,petugas',
     ]);
 
+    // Pisahkan data role dari data user
+    $role = $validated['role'];
+    unset($validated['role']);
+
+    // Enkripsi password
     $validated['password'] = bcrypt($validated['password']);
 
+    // Simpan user ke database
     $user = User::create($validated);
-    $user->assignRole('petugas');
+
+    // Assign role ke user baru
+    $user->assignRole($role);
 
     return redirect()->route('user.index')->with('success', 'Pengguna baru berhasil ditambahkan.');
-}
-
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(User $user)
-{
-    // Jika tidak ada halaman detail, bisa langsung abort
-    abort(404);
-}
-
-public function edit(User $user)
-{
-    return view('user.edit', compact('user'));
 }
 
 public function update(Request $request, User $user)
@@ -73,9 +59,12 @@ public function update(Request $request, User $user)
         'name'     => 'required|string|max:100',
         'email'    => 'required|email|max:50|unique:users,email,' . $user->id,
         'password' => 'nullable|string|min:8|confirmed',
+        'role'     => 'required|in:admin,petugas',
     ]);
 
-    // Enkripsi password hanya jika ada input password baru
+    $role = $validated['role'];
+    unset($validated['role']);
+
     if ($request->filled('password')) {
         $validated['password'] = bcrypt($validated['password']);
     } else {
@@ -83,16 +72,15 @@ public function update(Request $request, User $user)
     }
 
     $user->update($validated);
+    $user->syncRoles([$role]);
 
     return redirect()->route('user.index')->with('success', 'Data pengguna berhasil diperbarui.');
 }
 
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(User $user)
     {
-        //
+        $user->delete();
+        return redirect()->route('user.index')->with('success', 'Pengguna berhasil dihapus.');
     }
 }

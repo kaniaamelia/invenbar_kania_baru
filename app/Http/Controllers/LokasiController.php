@@ -77,7 +77,7 @@ class LokasiController extends Controller implements HasMiddleware
         return redirect()->route('lokasi.index')
             ->with('success', 'Lokasi berhasil diperbarui.');
     }
-
+    
     public function destroy(Lokasi $lokasi)
     {
         if ($lokasi->barang()->exists()) {

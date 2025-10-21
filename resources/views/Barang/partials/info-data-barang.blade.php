@@ -13,21 +13,21 @@
             <td>{{ $barang->lokasi->nama_lokasi }}</td>
         </tr>
         <tr>
-            <th>Jumlah</th>
-            <td>{{ $barang->jumlah }} {{ $barang->satuan }}</td>
+            <th>Total Jumlah</th>
+            <td>{{ $barang->kondisiBarang->sum('jumlah') }} {{ $barang->satuan }}</td>
         </tr>
         <tr>
-            <th>Kondisi</th>
+            <th>Rincian Kondisi</th>
             <td>
-                @php
-                    $badgeClass = 'bg-success';
-                    if ($barang->kondisi == 'Rusak Ringan') {
-                        $badgeClass = 'bg-warning text-dark';
-                    } elseif ($barang->kondisi == 'Rusak Berat') {
-                        $badgeClass = 'bg-danger';
-                    }
-                @endphp
-                <span class="badge {{ $badgeClass }}">{{ $barang->kondisi }}</span>
+                @forelse($barang->kondisiBarang as $kondisi)
+                    <div class="mb-1">
+                        <span class="badge bg-{{ $kondisi->kondisi === 'baik' ? 'success' : ($kondisi->kondisi === 'rusak_ringan' ? 'warning' : 'danger') }}">
+                            {{ $kondisi->jumlah }} {{ $barang->satuan }} {{ str_replace('_', ' ', ucfirst($kondisi->kondisi)) }}
+                        </span>
+                    </div>
+                @empty
+                    <span class="text-muted">Belum ada data kondisi</span>
+                @endforelse
             </td>
         </tr>
         <tr>

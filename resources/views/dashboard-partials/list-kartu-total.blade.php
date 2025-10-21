@@ -22,6 +22,22 @@
                 'icon' => 'bi-geo-alt',
                 'color' => 'success',
             ],
+             // Tambahan: Peminjaman
+            [
+                'text' => 'TOTAL PEMINJAMAN',
+                'total' => $jumlahPeminjaman ?? 0,
+                'route' => 'peminjaman.index',
+                'icon' => 'bi-journal-bookmark',
+                'color' => 'info',
+            ],
+            // Tambahan: Pemeliharaan
+            [
+                'text' => 'TOTAL PEMELIHARAAN',
+                'total' => $jumlahPemeliharaan ?? 0,
+                'route' => 'pemeliharaan.index',
+                'icon' => 'bi-tools',
+                'color' => 'warning',
+            ],
             [
                 'text' => 'TOTAL USER',
                 'total' => $jumlahUser,
@@ -30,6 +46,7 @@
                 'color' => 'danger',
                 'role' => 'admin',
             ],
+           
         ];
     @endphp
 
